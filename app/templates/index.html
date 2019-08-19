@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Welcome to Chariots!</h1>
+    
+    <div><b>Current Orders</b></div>
+    <ul> 
+    {% for order in orders %}
+    <li>{{ order.address, order.load }}</li>
+    {% endfor %} 
+    </ul>
+    <div><b>Available Vehicles</b></div>
+    <ul> 
+    {% for vehicle in vehicles %}
+    <li>{{ vehicle.vehiclename, vehicle.capacity }}</li>
+    {% endfor %} 
+    <ul>
+
+{% endblock %}
