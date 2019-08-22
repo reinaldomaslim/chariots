@@ -1,8 +1,8 @@
 """chariots table
 
-Revision ID: a5757226e6fa
+Revision ID: d6b28548fa81
 Revises: 
-Create Date: 2019-08-19 15:22:15.841623
+Create Date: 2019-08-22 13:38:48.093274
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'a5757226e6fa'
+revision = 'd6b28548fa81'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -28,6 +28,7 @@ def upgrade():
     op.create_table('order',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('address', sa.String(length=140), nullable=True),
+    sa.Column('latlon', sa.String(length=140), nullable=True),
     sa.Column('load', sa.Float(), nullable=True),
     sa.Column('timestamp', sa.DateTime(), nullable=True),
     sa.Column('vehicle_id', sa.Integer(), nullable=True),
