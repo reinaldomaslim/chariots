@@ -12,8 +12,8 @@ import googlemaps
 
 
 depot = '-0.068372,109.362745'
-API_KEY = 'AIzaSyAHdCBMRDn3r2D9C834-n658tLpme6_RYY'
-gmaps = googlemaps.Client(key=API_KEY)
+api = 'AIzaSyCmkjJjDKqjaeq9FW8Se4ZM9Z2x9hyHOYM'
+gmaps = googlemaps.Client(key=api)
 # colors = ['r', 'maroon', 'darkorange','orange', 'yellow', 'green', 'seagreen', 'blue']
 
 colors = ['red', 'blue', 'green', 'yellow', 'purple', 'maroon', 'olive', 'teal', 'orange', 'lime', 'cyan', 'magenta', 'mint', 'navy']
@@ -52,7 +52,7 @@ def decode_polyline(polyline_str):
 
     return coordinates
 
-def send_request(origin_addresses, dest_addresses, API_KEY):
+def send_request(origin_addresses, dest_addresses, api):
     """ Build and send request for the given origin and destination addresses."""
     def build_address_str(addresses):
         # Build a pipe-separated string of addresses
@@ -66,7 +66,7 @@ def send_request(origin_addresses, dest_addresses, API_KEY):
     origin_address_str = build_address_str(origin_addresses)
     dest_address_str = build_address_str(dest_addresses)
     request = request + '&origins=' + origin_address_str + '&destinations=' + \
-                       dest_address_str + '&key=' + API_KEY
+                       dest_address_str + '&key=' + api
     jsonResult = urllib.urlopen(request).read()
     response = json.loads(jsonResult)
     return response
@@ -93,13 +93,13 @@ def create_distance_matrix(data):
     for i in range(q):
         origin_addresses = addresses[i * max_rows: (i + 1) * max_rows]
         
-        response = send_request(origin_addresses, dest_addresses, API_KEY)
+        response = send_request(origin_addresses, dest_addresses, api)
         distance_matrix += build_distance_matrix(response)
 
     # Get the remaining remaining r rows, if necessary.
     if r > 0:
         origin_addresses = addresses[q * max_rows: q * max_rows + r]
-        response = send_request(origin_addresses, dest_addresses, API_KEY)
+        response = send_request(origin_addresses, dest_addresses, api)
         distance_matrix += build_distance_matrix(response)
 
     return distance_matrix
@@ -117,7 +117,7 @@ def print_solution(data, manager, routing, assignment):
 
     html_name = './app/templates/res.html'
     depot_latlon = str2ll(depot)
-    gmap = gmplot.GoogleMapPlotter(depot_latlon[0], depot_latlon[1], 15, API_KEY)
+    gmap = gmplot.GoogleMapPlotter(depot_latlon[0], depot_latlon[1], 15, api)
 
     total_distance = 0
     total_load = 0

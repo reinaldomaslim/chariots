@@ -4,8 +4,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import numpy as np 
 import googlemaps
 
-API_KEY = 'AIzaSyAHdCBMRDn3r2D9C834-n658tLpme6_RYY'
-gmaps = googlemaps.Client(key=API_KEY)
+api = 'AIzaSyCmkjJjDKqjaeq9FW8Se4ZM9Z2x9hyHOYM'
+gmaps = googlemaps.Client(key=api)
 
 #debugging tool, set FLASK_APP=erp.py
 # @app.shell_context_processor
