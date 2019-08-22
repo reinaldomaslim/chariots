@@ -3,8 +3,9 @@ api_version: 1
 threadsafe: true
 
 handlers:
-- url: /app/.*
-  script: __init__.app
+- url: /.*
+  script: main.app
+
   
 libraries:
   - name: ssl
