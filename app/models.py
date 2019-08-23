@@ -16,6 +16,7 @@ class Vehicle(db.Model):
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     address = db.Column(db.String(140))
+    latlon = db.Column(db.String(140))
     load = db.Column(db.Float)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     

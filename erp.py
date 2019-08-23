@@ -2,6 +2,11 @@ from app import app, db
 from app.models import Order, Vehicle
 from werkzeug.security import generate_password_hash, check_password_hash
 import numpy as np 
+import googlemaps
+
+api = 'AIzaSyCmkjJjDKqjaeq9FW8Se4ZM9Z2x9hyHOYM'
+gmaps = googlemaps.Client(key=api)
+
 #debugging tool, set FLASK_APP=erp.py
 # @app.shell_context_processor
 # def make_shell_context():
@@ -51,16 +56,18 @@ loads = np.random.randint(5, 12, len(lines))
 for i in range(len(lines)):
     line = lines[i]
     latlon = line.split()
-    address = latlon[0]+latlon[1]
+    latlon = latlon[0]+latlon[1]    
+    reverse_geocode_result = gmaps.reverse_geocode((float(latlon.split(',')[0]), float(latlon.split(',')[1])))[0]
+    address = reverse_geocode_result['formatted_address']
     load = loads[i]
-    order = Order(address=address, load=load)
+    order = Order(address = address, latlon=latlon, load=load)
     db.session.add(order)
     db.session.commit()
-        
+    # break
 
 caps = [45, 40, 45, 50]
 for i in range(len(caps)):
-    vehicle = Vehicle(vehiclename='veh_'+str(i), capacity=caps[i])
+    vehicle = Vehicle(vehiclename='KB'+str(i)+str(i)+str(i)+str(i)+'SS', capacity=caps[i])
     db.session.add(vehicle)
     db.session.commit()
 

@@ -12,35 +12,11 @@ import googlemaps
 
 
 depot = '-0.068372,109.362745'
-API_KEY = 'AIzaSyAHdCBMRDn3r2D9C834-n658tLpme6_RYY'
-gmaps = googlemaps.Client(key=API_KEY)
+api = 'AIzaSyCmkjJjDKqjaeq9FW8Se4ZM9Z2x9hyHOYM'
+gmaps = googlemaps.Client(key=api)
 # colors = ['r', 'maroon', 'darkorange','orange', 'yellow', 'green', 'seagreen', 'blue']
 
-colors = ['r', 'blue', 'green', 'yellow']
-
-# def create_data_model():
-#     """Stores the data for the problem."""
-#     data = {}
-
-#     f = open('./data/all_destinations.txt', 'r')
-#     lines = f.readlines()
-#     data['addresses'] = [depot]
-#     for line in lines:
-#         latlon = line.split()
-#         data['addresses'].append(latlon[0]+latlon[1])
-
-#     data['vehicle_capacities'] = [30, 40, 55, 35]
-#     data['num_vehicles'] = 4
-#     data['depot'] = 0
-
-#     data['distance_matrix'] = create_distance_matrix(data)
-#     data['demands'] = np.random.randint(1, 5, len(data['addresses'])).tolist()
-#     data['demands'][0] = 0
-
-#     print(len(data['addresses']))
-#     print(data['demands'])
-
-#     return data
+colors = ['red', 'blue', 'green', 'yellow', 'purple', 'maroon', 'olive', 'teal', 'orange', 'lime', 'cyan', 'magenta', 'mint', 'navy']
 
 
 def decode_polyline(polyline_str):
@@ -76,7 +52,7 @@ def decode_polyline(polyline_str):
 
     return coordinates
 
-def send_request(origin_addresses, dest_addresses, API_KEY):
+def send_request(origin_addresses, dest_addresses, api):
     """ Build and send request for the given origin and destination addresses."""
     def build_address_str(addresses):
         # Build a pipe-separated string of addresses
@@ -90,7 +66,7 @@ def send_request(origin_addresses, dest_addresses, API_KEY):
     origin_address_str = build_address_str(origin_addresses)
     dest_address_str = build_address_str(dest_addresses)
     request = request + '&origins=' + origin_address_str + '&destinations=' + \
-                       dest_address_str + '&key=' + API_KEY
+                       dest_address_str + '&key=' + api
     jsonResult = urllib.urlopen(request).read()
     response = json.loads(jsonResult)
     return response
@@ -117,13 +93,13 @@ def create_distance_matrix(data):
     for i in range(q):
         origin_addresses = addresses[i * max_rows: (i + 1) * max_rows]
         
-        response = send_request(origin_addresses, dest_addresses, API_KEY)
+        response = send_request(origin_addresses, dest_addresses, api)
         distance_matrix += build_distance_matrix(response)
 
     # Get the remaining remaining r rows, if necessary.
     if r > 0:
         origin_addresses = addresses[q * max_rows: q * max_rows + r]
-        response = send_request(origin_addresses, dest_addresses, API_KEY)
+        response = send_request(origin_addresses, dest_addresses, api)
         distance_matrix += build_distance_matrix(response)
 
     return distance_matrix
@@ -141,12 +117,12 @@ def print_solution(data, manager, routing, assignment):
 
     html_name = './app/templates/res.html'
     depot_latlon = str2ll(depot)
-    gmap = gmplot.GoogleMapPlotter(depot_latlon[0], depot_latlon[1], 15, API_KEY)
+    gmap = gmplot.GoogleMapPlotter(depot_latlon[0], depot_latlon[1], 15, api)
 
     total_distance = 0
     total_load = 0
 
-    paths = []
+    routes = []
     for vehicle_id in range(data['num_vehicles']):
         index = routing.Start(vehicle_id)
         plan_output = 'Route for vehicle {}:\n'.format(vehicle_id)
@@ -170,14 +146,12 @@ def print_solution(data, manager, routing, assignment):
                                                  route_load)
         plan_output += 'Distance of the route: {}m\n'.format(route_distance)
         plan_output += 'Load of the route: {}\n'.format(route_load)
-        paths.append(plan_output)
         print(plan_output)
 
         total_distance += route_distance
         total_load += route_load
-
-        print(route)
-
+        routes.append([route, route_distance, route_load])
+        
         coordinates = []
         for i in range(len(route)-1):
             src = data['addresses'][route[i]]
@@ -198,17 +172,11 @@ def print_solution(data, manager, routing, assignment):
                                                 departure_time=now)[0]
             
             polyline = directions_result['overview_polyline']['points']
-            # for key, value in directions_result.iteritems() :
-            #     print(key)
-
-            # coordinates.extend(decode_polyline(polyline))
-            # coordinates = np.asarray(coordinates)
-
             coordinates = np.asarray(decode_polyline(polyline))
             gmap.plot(coordinates[:, 0], coordinates[:, 1], colors[vehicle_id%len(colors)], edge_width=2)
         
-        # break
 
+        
     if gmap is not None:
         #save plot as html
         gmap.draw(html_name)
@@ -216,7 +184,7 @@ def print_solution(data, manager, routing, assignment):
     print('Total distance of all routes: {}m'.format(total_distance))
     print('Total load of all routes: {}'.format(total_load))
 
-    return paths
+    return routes
 
     #draw html for this
 def solve_cvrp(data):

@@ -5,23 +5,69 @@ from app.forms import OrderForm, VehicleForm
 from flask import render_template, flash, redirect, url_for, request
 from cvrp import *
 import time
-paths = []
+routes = []
 
 @app.route('/')
 @app.route('/index')
 def index():
     orders = Order.query.all()
     vehicles = Vehicle.query.all()
-
     return render_template("index.html", title='Home Page', orders=orders, vehicles=vehicles)
     
+
+@app.route('/delete_order', methods=['POST'])
+def delete_order():
+    print(request.form.get('status'))
+    Order.query.filter_by(id=request.form.get('delete_order')).delete()
+    db.session.commit()
+    orders = Order.query.all()
+    vehicles = Vehicle.query.all()
+    return render_template("index.html", title='Home Page', orders=orders, vehicles=vehicles)
+    
+
+@app.route('/delete_vehicle', methods=['POST'])
+def delete_vehicle():
+    Vehicle.query.filter_by(id=request.form.get('delete_vehicle')).delete()
+    db.session.commit()
+    orders = Order.query.all()
+    vehicles = Vehicle.query.all()
+    return render_template("index.html", title='Home Page', orders=orders, vehicles=vehicles)
+    
+
 @app.route('/compute', methods=['GET', 'POST'])
 def compute():
-    global paths
-    if len(paths) == 0:
-        data = create_data_model()
-        paths = solve_cvrp(data)
-        time.sleep(1)
+    global routes
+    # if len(routes) == 0:
+    data = create_data_model()
+    routes = solve_cvrp(data)
+    time.sleep(1)
+
+    orders = Order.query.all()
+    vehicles = Vehicle.query.all()
+
+    paths = []
+    for i in range(len(routes)):
+        path = []
+        vehicle = vehicles[i]
+        path.append(vehicle.vehiclename+'('+colors[i]+')'+' : ')
+        route = routes[i][0]
+        total_dist = int(routes[i][1]/1000)
+        total_load = routes[i][2]
+        print(route)
+        for j in range(1, len(route)-1):
+            order = orders[route[j]-1]
+            print(order.timestamp)
+            order.vehicle_id = vehicle.id
+            address = order.address.split(',')[0]
+            path.append(address)
+            if j != len(route)-2:
+                path.append(' > ')
+
+        path.append(' | distance: '+str(total_dist)+' km')
+        path.append(' | load: '+str(total_load))
+        path = ''.join(path)
+        paths.append(path)
+
     return render_template("compute.html", title='Result', paths=paths)
 
 @app.route('/result')
@@ -33,7 +79,13 @@ def order():
     form = OrderForm()
     
     if form.validate_on_submit():
-        order = Order(address=form.address.data, load=form.load.data)
+
+        address = request.form.get('autocomplete')
+        
+        geocode_result = gmaps.geocode(address)[0]['geometry']['location']
+        latlon = str(geocode_result['lat'])+','+str(geocode_result['lng'])
+        
+        order = Order(address = address, latlon=latlon, load=form.load.data)
         db.session.add(order)
         db.session.commit()
         flash('order added')
@@ -58,6 +110,8 @@ def vehicle():
 
 
 
+
+
 def create_data_model():
     """Stores the data for the problem."""
     data = {}
@@ -69,7 +123,7 @@ def create_data_model():
 
     orders = Order.query.all()
     for u in orders:
-        data['addresses'].append(u.address)
+        data['addresses'].append(u.latlon)
         data['demands'].append(int(u.load))
 
     vehicles = Vehicle.query.all()

@@ -5,7 +5,7 @@ from app.models import Order, Vehicle
 
 class OrderForm(FlaskForm):
     #currently string of 'lat,lon'
-    address = StringField('Address', validators=[DataRequired()])
+    # address = StringField('Address', validators=[DataRequired()])
     load = FloatField('Load', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
