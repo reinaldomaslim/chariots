@@ -67,7 +67,7 @@ def send_request(origin_addresses, dest_addresses, api):
     dest_address_str = build_address_str(dest_addresses)
     request = request + '&origins=' + origin_address_str + '&destinations=' + \
                        dest_address_str + '&key=' + api
-    jsonResult = urllib.urlopen(request).read()
+    jsonResult = urllib.request.urlopen(request).read().decode("utf-8")
     response = json.loads(jsonResult)
     return response
 
