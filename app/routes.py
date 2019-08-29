@@ -49,7 +49,7 @@ def compute():
     for i in range(len(routes)):
         path = []
         vehicle = vehicles[i]
-        path.append(vehicle.vehiclename+'('+colors[i]+')'+' : ')
+        path.append(vehicle.vehiclename+' : ')
         route = routes[i][0]
         total_dist = int(routes[i][1]/1000)
         total_load = routes[i][2]

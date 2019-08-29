@@ -3,8 +3,12 @@ from app.models import Order, Vehicle
 from werkzeug.security import generate_password_hash, check_password_hash
 import numpy as np 
 import googlemaps
+from dotenv import load_dotenv
+import os
 
-api = 'AIzaSyCmkjJjDKqjaeq9FW8Se4ZM9Z2x9hyHOYM'
+load_dotenv()
+api = os.getenv("API")
+
 gmaps = googlemaps.Client(key=api)
 
 #debugging tool, set FLASK_APP=erp.py

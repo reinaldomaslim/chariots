@@ -5,7 +5,10 @@ handlers:
   script: auto
   
 env_variables:
-  CLOUD_SQL_CONNECTION_NAME: chariots-dbig:asia-southeast-1:chariots-dbig-db
+  CLOUD_SQL_CONNECTION_NAME: chariots-dbig:asia-southeast1:chariots-dbig-db
   DB_USER: root
   DB_PASS: aloha
   DB_NAME: chariots
+
+beta_settings:
+  cloud_sql_instances: chariots-dbig:asia-southeast1:chariots-dbig-db

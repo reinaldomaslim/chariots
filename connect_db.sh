@@ -1,1 +1,1 @@
-./cloud_sql_proxy -dir=/cloudsql --instances=chariots-dbig:asia-southeast-1:chariots-dbig-db --credential_file=/home/rm/Downloads/chariots-dbig-b958016e566f.json
+./cloud_sql_proxy -dir=/cloudsql --instances=chariots-dbig:asia-southeast1:chariots-dbig-db --credential_file=/home/rm/Downloads/chariots-dbig-b958016e566f.json

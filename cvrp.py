@@ -9,10 +9,13 @@ import urllib
 import json
 import numpy as np 
 import googlemaps
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+api = os.getenv("API")
 
 depot = '-0.068372,109.362745'
-api = 'AIzaSyCmkjJjDKqjaeq9FW8Se4ZM9Z2x9hyHOYM'
 gmaps = googlemaps.Client(key=api)
 # colors = ['r', 'maroon', 'darkorange','orange', 'yellow', 'green', 'seagreen', 'blue']
 
@@ -152,34 +155,34 @@ def print_solution(data, manager, routing, assignment):
         total_load += route_load
         routes.append([route, route_distance, route_load])
         
-        coordinates = []
-        for i in range(len(route)-1):
-            src = data['addresses'][route[i]]
-            dst = data['addresses'][route[i+1]]
+    #     coordinates = []
+    #     for i in range(len(route)-1):
+    #         src = data['addresses'][route[i]]
+    #         dst = data['addresses'][route[i+1]]
             
-            latlon = str2ll(src)
-            if route[i] == 0:
-                color = 'pink'
-            else:
-                color = colors[vehicle_id%len(colors)]
+    #         latlon = str2ll(src)
+    #         if route[i] == 0:
+    #             color = 'pink'
+    #         else:
+    #             color = colors[vehicle_id%len(colors)]
 
-            gmap.marker(latlon[0], latlon[1], color)
+    #         gmap.marker(latlon[0], latlon[1], color)
             
-            now = datetime.now()
-            directions_result = gmaps.directions(src,
-                                                dst,
-                                                mode="driving",
-                                                departure_time=now)[0]
+    #         now = datetime.now()
+    #         directions_result = gmaps.directions(src,
+    #                                             dst,
+    #                                             mode="driving",
+    #                                             departure_time=now)[0]
             
-            polyline = directions_result['overview_polyline']['points']
-            coordinates = np.asarray(decode_polyline(polyline))
-            gmap.plot(coordinates[:, 0], coordinates[:, 1], colors[vehicle_id%len(colors)], edge_width=2)
+    #         polyline = directions_result['overview_polyline']['points']
+    #         coordinates = np.asarray(decode_polyline(polyline))
+    #         gmap.plot(coordinates[:, 0], coordinates[:, 1], colors[vehicle_id%len(colors)], edge_width=2)
         
 
         
-    if gmap is not None:
-        #save plot as html
-        gmap.draw(html_name)
+    # if gmap is not None:
+    #     #save plot as html
+    #     gmap.draw(html_name)
 
     print('Total distance of all routes: {}m'.format(total_distance))
     print('Total load of all routes: {}'.format(total_load))
