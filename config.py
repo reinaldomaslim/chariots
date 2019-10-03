@@ -22,9 +22,9 @@ uri = sqlalchemy.engine.url.URL(
 
 class Config(object):
     #config class for everything
-    SQLALCHEMY_DATABASE_URI = uri or \
-        'mysql://root:aloha@35.198.241.38:3306/chariots'
-
+    # SQLALCHEMY_DATABASE_URI = uri or \
+    #     'mysql://root:aloha@35.198.241.38:3306/chariots'
+    SQLALCHEMY_DATABASE_URI = 'mysql://root:aloha@35.198.241.38/chariots'
     # 'sqlite:///' + os.path.join(basedir, 'app.db')
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False

@@ -11,6 +11,8 @@ import numpy as np
 import googlemaps
 from dotenv import load_dotenv
 import os
+import osrm
+
 
 load_dotenv()
 api = os.getenv("API")
@@ -81,31 +83,64 @@ def build_distance_matrix(response):
         distance_matrix.append(row_list)
     return distance_matrix
 
-def create_distance_matrix(data):
+def create_distance_matrix(data, mode = 'utm'):
     addresses = data["addresses"]
-    # Distance Matrix API only accepts 100 elements per request, so get rows in multiple requests.
-    max_elements = 100
-    num_addresses = len(addresses) # 16 in this example.
-    # Maximum number of rows that can be computed per request (6 in this example).
-    max_rows = max_elements // num_addresses
-    # num_addresses = q * max_rows + r (q = 2 and r = 4 in this example).
-    q, r = divmod(num_addresses, max_rows)
-    dest_addresses = addresses
-    distance_matrix = []
-    # Send q requests, returning max_rows rows per request.
-    for i in range(q):
-        origin_addresses = addresses[i * max_rows: (i + 1) * max_rows]
-        
-        response = send_request(origin_addresses, dest_addresses, api)
-        distance_matrix += build_distance_matrix(response)
 
-    # Get the remaining remaining r rows, if necessary.
-    if r > 0:
-        origin_addresses = addresses[q * max_rows: q * max_rows + r]
-        response = send_request(origin_addresses, dest_addresses, api)
-        distance_matrix += build_distance_matrix(response)
+    if mode == 'real':    
+        # Distance Matrix API only accepts 100 elements per request, so get rows in multiple requests.
+        max_elements = 100
+        num_addresses = len(addresses) # 16 in this example.
+        # Maximum number of rows that can be computed per request (6 in this example).
+        max_rows = max_elements // num_addresses
+        # num_addresses = q * max_rows + r (q = 2 and r = 4 in this example).
+        q, r = divmod(num_addresses, max_rows)
+        dest_addresses = addresses
+        distance_matrix = []
+        # Send q requests, returning max_rows rows per request.
+        for i in range(q):
+            origin_addresses = addresses[i * max_rows: (i + 1) * max_rows]
+            
+            response = send_request(origin_addresses, dest_addresses, api)
+            distance_matrix += build_distance_matrix(response)
+
+        # Get the remaining remaining r rows, if necessary.
+        if r > 0:
+            origin_addresses = addresses[q * max_rows: q * max_rows + r]
+            response = send_request(origin_addresses, dest_addresses, api)
+            distance_matrix += build_distance_matrix(response)
+
+    elif mode == 'utm':
+        
+        distance_matrix = np.zeros((len(addresses), len(addresses)))
+        for i in range(len(addresses)):
+            for j in range(i+1, len(addresses)):
+                dist = utm_dist(addresses[i], addresses[j])
+                distance_matrix[i][j] = dist
+                distance_matrix[j][i] = dist
+
+    # else:
+    print(addresses)
+
+    print(distance_matrix)
 
     return distance_matrix
+
+def utm_dist(add1, add2):
+    R = 6373.0
+    lat1 = np.radians(float(add1.split(',')[0]))
+    lon1 = np.radians(float(add1.split(',')[1]))
+    lat2 = np.radians(float(add2.split(',')[0]))
+    lon2 = np.radians(float(add2.split(',')[1]))
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+
+    a = np.sin(dlat / 2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2)**2
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+
+    distance = int(R * c * 1000)
+
+    return distance    
 
 
 
@@ -242,6 +277,36 @@ def solve_cvrp(data):
     if assignment:
         paths = print_solution(data, manager, routing, assignment)
     return paths
+
+
+def create_data_model():
+    """Stores the data for the problem."""
+    data = {}
+
+    data['addresses'] = ['-0.068372,109.362745']
+    data['demands'] = [0]
+    data['depot'] = 0    
+    data['vehicle_capacities'] = []
+
+    orders = Order.query.all()
+    for u in orders:
+        data['addresses'].append(u.latlon)
+        data['demands'].append(int(u.load))
+
+    vehicles = Vehicle.query.all()
+    for u in vehicles:
+        data['vehicle_capacities'].append(int(u.capacity))
+
+    data['num_vehicles'] = len(vehicles)
+
+    data['distance_matrix'] = create_distance_matrix(data)
+
+    print(len(data['addresses']))
+    print(data['demands'])
+
+    return data
+
+
 
 def main():
     """Solve the CVRP problem."""

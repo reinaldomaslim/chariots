@@ -5,7 +5,11 @@ from app.forms import OrderForm, VehicleForm
 from flask import render_template, flash, redirect, url_for, request
 from cvrp import *
 import time
-routes = []
+import json
+
+
+path_data = []
+depot = '-0.068372,109.362745'
 
 @app.route('/')
 @app.route('/index')
@@ -36,8 +40,8 @@ def delete_vehicle():
 
 @app.route('/compute', methods=['GET', 'POST'])
 def compute():
-    global routes
-    # if len(routes) == 0:
+    global path_data
+
     data = create_data_model()
     routes = solve_cvrp(data)
     time.sleep(1)
@@ -46,33 +50,76 @@ def compute():
     vehicles = Vehicle.query.all()
 
     paths = []
+
+    path_data = []
     for i in range(len(routes)):
+        
         path = []
+        lat_lng = []
+
         vehicle = vehicles[i]
         path.append(vehicle.vehiclename+' : ')
         route = routes[i][0]
         total_dist = int(routes[i][1]/1000)
         total_load = routes[i][2]
-        print(route)
-        for j in range(1, len(route)-1):
-            order = orders[route[j]-1]
-            print(order.timestamp)
-            order.vehicle_id = vehicle.id
-            address = order.address.split(',')[0]
-            path.append(address)
-            if j != len(route)-2:
-                path.append(' > ')
+        
+
+        for j in range(1, len(route)):
+
+
+            if j == 1:
+                src = depot
+            else:
+                src = orders[route[j-1]-1].latlon
+
+            if j == len(route)-1:
+                dst = depot
+            else:
+                dst = orders[route[j]-1].latlon
+
+                order = orders[route[j]-1]
+                order.vehicle_id = vehicle.id
+                address = order.address.split(',')[0]
+                path.append(address)
+
+
+                if j < len(route)-2:
+                    path.append(' > ')
+
+            now = datetime.now()
+            directions_result = gmaps.directions(src,
+                                                dst,
+                                                mode="driving",
+                                                departure_time=now)[0]
+            
+            polyline = directions_result['overview_polyline']['points']
+            coordinates = np.asarray(decode_polyline(polyline))
+
+            lat_lng.extend(coordinates.tolist())
+
 
         path.append(' | distance: '+str(total_dist)+' km')
         path.append(' | load: '+str(total_load))
         path = ''.join(path)
         paths.append(path)
 
-    return render_template("compute.html", title='Result', paths=paths)
+        path_data.append(lat_lng)
+
+
+    return render_template("compute.html", title='Compute', paths=paths)
 
 @app.route('/result')
 def result():
-    return render_template("res.html", title='Result')
+    global path_data
+
+    orders = Order.query.all()
+    orders_data = [[float(depot.split(',')[0]), float(depot.split(',')[1])]]
+
+    for order in orders:
+        latlon = order.latlon.split(',')
+        orders_data.append([float(latlon[0]), float(latlon[1])])        
+
+    return render_template("res.html", title='Map', path_data = json.dumps(path_data), orders_data = json.dumps(orders_data))
 
 @app.route('/order', methods=['GET', 'POST'])
 def order():
@@ -116,7 +163,7 @@ def create_data_model():
     """Stores the data for the problem."""
     data = {}
 
-    data['addresses'] = ['-0.068372,109.362745']
+    data['addresses'] = [depot]
     data['demands'] = [0]
     data['depot'] = 0    
     data['vehicle_capacities'] = []
